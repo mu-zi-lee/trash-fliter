@@ -824,7 +824,7 @@ export default [
                               "id": "requestRate",
                               "type": "number",
                               "min": "1",
-                              "max": "90",
+                              "max": "200",
                               "aria-label": "每分钟请求上限"
                             },
                             "children": []

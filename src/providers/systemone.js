@@ -3,16 +3,9 @@ import { activeCategories, assessmentInstructions } from '../filter/policy.js';
 
 export function buildPayload(text, config, context = {}) {
   const instructions = assessmentInstructions(context);
-  const questions = Object.fromEntries(activeCategories(config, context).flatMap(id => {
+  const questions = Object.fromEntries(activeCategories(config, context).map(id => {
     const category = CATEGORIES[id];
-    return [
-      [id, { type: 'noul', instructions: `${instructions} ${category.question}`, criteria: { true: category.yes, false: category.no } }],
-      [`evidence_${id}`, {
-        type: 'noul',
-        instructions: `${instructions} Does the supplied text contain explicit, unambiguous evidence of this specific violation: ${category.question} Assess evidence for this category only, not whether the topic or author is likable.`,
-        criteria: { true: `An identifiable statement or pattern in the supplied text directly meets this definition: ${category.yes}`, false: `The conclusion relies on guessed intent, unseen content, personal taste or ambiguous rhetoric. Counterexamples: ${category.no}` },
-      }],
-    ];
+    return [id, { type: 'noul', instructions: `${instructions} ${category.question}`, criteria: { true: category.yes, false: category.no } }];
   }));
   if (config.protectUseful) questions.useful = { ...USEFUL_QUESTION, instructions: `${instructions} ${USEFUL_QUESTION.instructions}` };
   return {

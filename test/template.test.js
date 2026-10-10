@@ -20,7 +20,7 @@ test('compiled panel builds readable DOM without HTML sinks', async () => {
     assert.equal(root.querySelector('#panel-title').textContent, 'trash-fliter');
     assert.equal(root.querySelector('#blockedKeywords').placeholder, '加群领取\n稳赚不赔');
     assert.equal(root.querySelectorAll('[role="tab"]').length, 3);
-    assert.equal(root.querySelector('#requestRate').max, '90');
+    assert.equal(root.querySelector('#requestRate').max, '200');
   } finally {
     globalThis.document = previous;
     Object.defineProperty(dom.window.Element.prototype, 'innerHTML', descriptor);

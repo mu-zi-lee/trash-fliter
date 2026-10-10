@@ -67,6 +67,8 @@ try {
     await expect(page.getByRole('dialog')).toBeVisible();
     await page.screenshot({ path: `test-results/panel-${viewport.width}-light.png` });
     await page.getByRole('tab', { name: '服务', exact: true }).click();
+    await expect(page.locator('#requestRate')).toHaveAttribute('max', '200');
+    await page.locator('#requestRate').fill('200');
     await expect(page.getByRole('link', { name: '注册 Nace' })).toHaveAttribute('href', 'https://console.nace.ai/invite/7ccrty4b');
     await expect(page.getByRole('dialog')).not.toContainText('邀请');
     await expect(page.getByRole('dialog')).not.toContainText('7ccrty4b');
@@ -87,6 +89,7 @@ try {
     await page.getByRole('tab', { name: '规则', exact: true }).click();
     await page.locator('#blockedAccounts').fill('@slowbuild');
     await page.getByRole('button', { name: '保存设置' }).click();
+    await expect(page.locator('#requestRate')).toHaveValue('200');
     const local = page.locator('article').filter({ has: page.locator('a[href="/slowbuild/status/10003"]') });
     await expect(local).toHaveAttribute('data-xqf-state', 'collapse');
     await page.getByRole('button', { name: '停用并恢复帖子' }).click();

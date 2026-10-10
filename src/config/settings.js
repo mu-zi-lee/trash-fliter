@@ -15,7 +15,7 @@ export const DEFAULTS = Object.freeze({
   blockedKeywords: [],
   blockedAccounts: [],
   allowedAccounts: [],
-  requestRate: 30,
+  requestRate: 200,
 });
 
 const bounded = (value, fallback, min, max) => Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Number(value))) : fallback;
@@ -40,7 +40,7 @@ export function normalizeSettings(raw = {}) {
     blockedKeywords: lines(raw.blockedKeywords),
     blockedAccounts: lines(raw.blockedAccounts, true),
     allowedAccounts: lines(raw.allowedAccounts, true),
-    requestRate: Math.round(bounded(raw.requestRate, 30, 1, 90)),
+    requestRate: Math.round(bounded(raw.requestRate, DEFAULTS.requestRate, 1, 200)),
   };
 }
 

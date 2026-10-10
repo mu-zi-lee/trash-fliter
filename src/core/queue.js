@@ -1,57 +1,57 @@
 export class TaskQueue {
-  constructor({ onError, onChange = () => {}, interval = 650 }) {
+  constructor({ onError, onChange = () => {}, interval = 0, concurrency = 4 }) {
     this.onError = onError;
     this.onChange = onChange;
     this.interval = interval;
+    this.concurrency = concurrency;
+    this.active = new Map();
     this.tasks = new Map();
     this.generation = 0;
     this.blocked = false;
-    this.running = false;
   }
   add(key, task) {
-    if (this.blocked || this.tasks.has(key) || (this.currentKey === key && this.currentGeneration === this.generation)) return false;
+    if (this.blocked || this.tasks.has(key) || [...this.active.values()].some(job => job.key === key && job.generation === this.generation)) return false;
     this.tasks.set(key, task);
     this.onChange();
-    void this.pump();
+    this.pump();
     return true;
   }
   reset() {
     this.generation++;
     this.tasks.clear();
     this.blocked = false;
-    this.controller?.abort();
-    this.wake?.();
+    clearTimeout(this.timer);
+    this.timer = null;
+    for (const job of this.active.values()) job.controller.abort();
     this.onChange();
   }
-  async pump() {
-    if (this.running || this.blocked) return;
-    this.running = true;
-    try {
-      while (this.tasks.size && !this.blocked) {
-        const [key, task] = this.tasks.entries().next().value;
-        this.tasks.delete(key);
-        const generation = this.generation;
-        this.currentKey = key;
-        this.currentGeneration = generation;
-        this.controller = new AbortController();
-        this.onChange();
-        try { await task(this.controller.signal); }
-        catch (error) {
-          if (generation === this.generation && error.name !== 'AbortError') {
-            this.blocked = true;
-            this.tasks.clear();
-            this.onError(error);
-          }
-        }
-        finally { this.currentKey = null; this.controller = null; this.onChange(); }
-        if (this.tasks.size && !this.blocked && generation === this.generation) {
-          await new Promise(resolve => {
-            const timer = setTimeout(() => { this.wake = null; resolve(); }, this.interval);
-            this.wake = () => { clearTimeout(timer); this.wake = null; resolve(); };
-          });
-        }
-      }
-    } finally { this.running = false; this.onChange(); }
+  pump() {
+    if (this.blocked || this.timer) return;
+    while (this.tasks.size && this.active.size < this.concurrency && !this.blocked) {
+      const [key, task] = this.tasks.entries().next().value;
+      this.tasks.delete(key);
+      const job = { key, generation: this.generation, controller: new AbortController() };
+      this.active.set(job, job);
+      this.onChange();
+      void this.run(job, task);
+    }
   }
-  get pending() { return this.tasks.size + (this.currentKey ? 1 : 0); }
+  async run(job, task) {
+    try { await task(job.controller.signal); }
+    catch (error) {
+      if (job.generation === this.generation && error.name !== 'AbortError') {
+        this.blocked = true;
+        this.tasks.clear();
+        for (const other of this.active.values()) if (other !== job) other.controller.abort();
+        this.onError(error);
+      }
+    } finally {
+      this.active.delete(job);
+      this.onChange();
+      if (this.interval && this.tasks.size && !this.blocked && !this.timer) {
+        this.timer = setTimeout(() => { this.timer = null; this.pump(); }, this.interval);
+      } else this.pump();
+    }
+  }
+  get pending() { return this.tasks.size + this.active.size; }
 }

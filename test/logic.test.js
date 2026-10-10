@@ -20,8 +20,10 @@ test('normalize untrusted settings and migrate old cover mode', () => {
   assert.equal(result.threshold, 0.99);
   assert.equal(result.keys.nace, '');
   assert.equal(DEFAULTS.enabled, false);
-  assert.equal(normalizeSettings({ requestLimit: 100 }).requestRate, 30);
-  assert.equal(normalizeSettings({ requestRate: 200 }).requestRate, 90);
+  assert.equal(normalizeSettings({ requestLimit: 100 }).requestRate, 200);
+  assert.equal(normalizeSettings({ requestRate: 200 }).requestRate, 200);
+  assert.equal(normalizeSettings({ requestRate: 999 }).requestRate, 200);
+  assert.equal(normalizeSettings({ requestRate: 30 }).requestRate, 30);
 });
 
 test('rate limit replenishes on a rolling window without a lifetime ceiling', () => {
@@ -50,6 +52,12 @@ test('useful content vetoes model filtering but does not veto local rules', () =
   assert.equal(scoreDecision({ marketing: 0.95, evidence_marketing: 0.95, useful: 0.2 }, config).kind, 'filter');
   assert.equal(scoreDecision({ marketing: 0.87, evidence_marketing: 0.95, useful: 0.2 }, config).kind, 'allow');
   assert.equal(scoreDecision({ marketing: 0.88, evidence_marketing: 0.95, useful: 0.2 }, config).kind, 'filter');
+});
+
+test('weak usefulness cannot rescue a strong spam score', () => {
+  assert.equal(scoreDecision({ marketing: 0.98, useful: 0.75 }, config).kind, 'filter');
+  assert.equal(scoreDecision({ marketing: 0.9, useful: 0.95 }, config).kind, 'protected');
+  assert.equal(scoreDecision({ marketing: 0.9, useful: 0.95 }, { ...config, protectUseful: false }).kind, 'filter');
 });
 
 test('model schema rejects incomplete scores instead of treating them as safe', () => {
@@ -114,7 +122,7 @@ test('transport errors never reflect server HTML or credentials into the UI', as
 
 test('queue reset cancels old work and allows the same post to be enqueued again', async () => {
   const events = [];
-  const queue = new TaskQueue({ interval: 0, onError: error => events.push(error.message) });
+  const queue = new TaskQueue({ interval: 0, concurrency: 1, onError: error => events.push(error.message) });
   queue.add('post', signal => new Promise((_, reject) => signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))));
   queue.reset();
   assert.equal(queue.add('post', async () => { events.push('new'); }), true);
@@ -125,7 +133,7 @@ test('queue reset cancels old work and allows the same post to be enqueued again
 
 test('queue stops all subsequent work after a service error', async () => {
   const events = [];
-  const queue = new TaskQueue({ interval: 0, onError: error => events.push(error.message) });
+  const queue = new TaskQueue({ interval: 0, concurrency: 1, onError: error => events.push(error.message) });
   queue.add('1', async () => { throw new Error('quota'); });
   queue.add('2', async () => events.push('unexpected'));
   await wait(20);

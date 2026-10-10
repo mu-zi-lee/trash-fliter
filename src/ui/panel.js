@@ -172,7 +172,7 @@ export class SettingsPanel {
     this.$('mode-hint').textContent = { collapse: '收起为紧凑提示，可随时展开。', cover: '遮盖内容，保留原帖高度。', dim: '降低内容透明度，保留阅读。', mark: '保留原帖，仅显示过滤原因。' }[mode];
   }
   readDraft() {
-    for (const [id, label, min, max, tab] of [['minLength', '最短检测长度', 1, 500, 'filter'], ['requestRate', '每分钟请求上限', 1, 90, 'service']]) {
+    for (const [id, label, min, max, tab] of [['minLength', '最短检测长度', 1, 500, 'filter'], ['requestRate', '每分钟请求上限', 1, 200, 'service']]) {
       const value = Number(this.$(id).value);
       if (!Number.isInteger(value) || value < min || value > max) {
         this.selectTab(tab);
