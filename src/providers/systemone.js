@@ -1,12 +1,25 @@
 import { CATEGORIES, PROVIDERS, USEFUL_QUESTION } from '../config/catalog.js';
+import { activeCategories, assessmentInstructions } from '../filter/policy.js';
 
-export function buildPayload(text, config) {
-  const questions = Object.fromEntries(config.categories.map(id => {
+export function buildPayload(text, config, context = {}) {
+  const instructions = assessmentInstructions(context);
+  const questions = Object.fromEntries(activeCategories(config, context).flatMap(id => {
     const category = CATEGORIES[id];
-    return [id, { type: 'noul', instructions: category.question, criteria: { true: category.yes, false: category.no } }];
+    return [
+      [id, { type: 'noul', instructions: `${instructions} ${category.question}`, criteria: { true: category.yes, false: category.no } }],
+      [`evidence_${id}`, {
+        type: 'noul',
+        instructions: `${instructions} Does the supplied text contain explicit, unambiguous evidence of this specific violation: ${category.question} Assess evidence for this category only, not whether the topic or author is likable.`,
+        criteria: { true: `An identifiable statement or pattern in the supplied text directly meets this definition: ${category.yes}`, false: `The conclusion relies on guessed intent, unseen content, personal taste or ambiguous rhetoric. Counterexamples: ${category.no}` },
+      }],
+    ];
   }));
-  if (config.protectUseful) questions.useful = USEFUL_QUESTION;
-  return { model: PROVIDERS[config.provider].model, state: text, questions };
+  if (config.protectUseful) questions.useful = { ...USEFUL_QUESTION, instructions: `${instructions} ${USEFUL_QUESTION.instructions}` };
+  return {
+    model: PROVIDERS[config.provider].model,
+    state: JSON.stringify({ site: context.site || 'unknown', scope: context.scope || '正文', titleOnly: !!context.titleOnly, truncated: !!context.truncated, content: text }),
+    questions,
+  };
 }
 
 export function parseScores(data, ids) {
@@ -62,8 +75,8 @@ export function requestJSON(provider, key, payload, { signal, transport = typeof
   });
 }
 
-export async function classify(text, config, signal) {
-  const payload = buildPayload(text, config);
+export async function classify(text, config, signal, context = {}) {
+  const payload = buildPayload(text, config, context);
   const data = await requestJSON(config.provider, config.keys[config.provider], payload, { signal });
   return parseScores(data, Object.keys(payload.questions));
 }

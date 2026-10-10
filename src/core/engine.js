@@ -5,6 +5,7 @@ import { x } from '../sites/x.js';
 import { observePosts } from '../sites/shared.js';
 import { TaskQueue } from './queue.js';
 import { RequestRateLimit } from './rate-limit.js';
+import { activeCategories, classificationContext, minimumLength, requiredScores } from '../filter/policy.js';
 
 export class FilterEngine {
   constructor({ getConfig, cache, view, onStatus, classifyPost = classify, site = x, rateLimit = new RequestRateLimit() }) {
@@ -54,8 +55,9 @@ export class FilterEngine {
     const current = this.site.extract(meta.article);
     return current?.identity === meta.post.identity && current.text === meta.post.text && current.handle === meta.post.handle;
   }
-  cached(text, config) {
-    return this.cache.get(signature(config), text, [...config.categories, ...(config.protectUseful ? ['useful'] : [])]);
+  cached(post, config) {
+    const context = classificationContext(post, this.site.id);
+    return this.cache.get(signature(config, context), post.text, requiredScores(config, context));
   }
   deferRequest(delay) {
     this.waitUntil = Date.now() + delay;
@@ -90,11 +92,11 @@ export class FilterEngine {
       if (local) {
         if (!meta.decision || meta.decision.reason !== local.reason || meta.decision.kind !== local.kind || (local.kind !== 'allow' && !this.view.has(article))) this.paint(meta, local);
       } else {
-        const cached = this.cached(post.text, this.getConfig());
+        const cached = this.cached(post, this.getConfig());
         if (cached) {
           meta.scores = cached;
           this.analyzed.add(post.identity);
-          if (!meta.decision || (meta.decision.kind !== 'allow' && !this.view.has(article))) this.paint(meta, scoreDecision(cached, this.getConfig()));
+          if (!meta.decision || (meta.decision.kind !== 'allow' && !this.view.has(article))) this.paint(meta, scoreDecision(cached, this.getConfig(), classificationContext(post, this.site.id)));
         } else if (meta.visible) this.consider(meta);
       }
     }
@@ -103,16 +105,17 @@ export class FilterEngine {
   consider(meta) {
     if (!this.enabled() || !this.valid(meta)) return;
     const config = this.getConfig();
+    const context = classificationContext(meta.post, this.site.id);
     const local = localDecision(meta.post, config);
     if (local) return this.paint(meta, local);
-    if (this.error || meta.queued || meta.scores || !config.categories.length || meta.post.text.length < config.minLength || !config.keys[config.provider]) return;
-    const cached = this.cached(meta.post.text, config);
-    if (cached) { meta.scores = cached; this.analyzed.add(meta.post.identity); return this.paint(meta, scoreDecision(cached, config)); }
+    if (this.error || meta.queued || meta.scores || !activeCategories(config, context).length || meta.post.text.length < minimumLength(config, context) || !config.keys[config.provider]) return;
+    const cached = this.cached(meta.post, config);
+    if (cached) { meta.scores = cached; this.analyzed.add(meta.post.identity); return this.paint(meta, scoreDecision(cached, config, context)); }
     const delay = this.rateLimit.delay(config.requestRate);
     if (delay) { this.deferRequest(delay); return; }
     const epoch = this.epoch;
     const snapshot = structuredClone(config);
-    const sig = signature(snapshot);
+    const sig = signature(snapshot, context);
     meta.queued = true;
     const accepted = this.queue.add(meta.post.identity, async signal => {
       if (!this.enabled() || !this.valid(meta) || !meta.visible || epoch !== this.epoch) { meta.queued = false; return; }
@@ -121,13 +124,13 @@ export class FilterEngine {
       this.rateLimit.record();
       this.requests++;
       // Bound cost without confusing a later text expansion with the original input.
-      const scores = await this.classifyPost(meta.post.text.slice(0, 6000), snapshot, signal);
+      const scores = await this.classifyPost(meta.post.text.slice(0, 6000), snapshot, signal, context);
       if (signal.aborted || epoch !== this.epoch || !this.getConfig().enabled || !this.site.allowedPage()) return;
       this.cache.set(sig, meta.post.text, scores);
       if (this.valid(meta)) {
         meta.scores = scores;
         this.analyzed.add(meta.post.identity);
-        this.paint(meta, scoreDecision(scores, snapshot));
+        this.paint(meta, scoreDecision(scores, snapshot, context));
       }
       this.schedule();
     });

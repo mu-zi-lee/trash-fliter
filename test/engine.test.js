@@ -28,7 +28,7 @@ function fixture(classifyPost, overrides = {}) {
 
 test('model never runs before intersection; local rules need no key or intersection', async () => {
   let requests = 0;
-  const f = fixture(async () => { requests++; return { marketing: 0.95, useful: 0.1 }; });
+  const f = fixture(async () => { requests++; return { marketing: 0.95, evidence_marketing: 0.95, useful: 0.1 }; });
   try {
     assert.equal(requests, 0);
     f.engine.intersection.callback([{ target: f.article, isIntersecting: true }]);
@@ -90,7 +90,7 @@ test('offscreen skipped tasks can be queued again on reentry', async () => {
 
 test('rate ceiling waits without error and automatically resumes visible posts', async () => {
   let requests = 0;
-  const f = fixture(async () => { requests++; return { marketing: 0.95, useful: 0.1 }; }, { requestRate: 1 });
+  const f = fixture(async () => { requests++; return { marketing: 0.95, evidence_marketing: 0.95, useful: 0.1 }; }, { requestRate: 1 });
   try {
     f.engine.rateLimit = new RequestRateLimit({ windowMs: 60 });
     f.engine.rateLimit.record();
@@ -118,5 +118,33 @@ test('a skipped offscreen post does not consume a renewed quota', async () => {
     f.meta.visible = false;
     await wait(200);
     assert.equal(requests, 0);
+  } finally { f.close(); }
+});
+
+test('engine passes title context, detects short titles and does not reuse body cache', async () => {
+  let received;
+  const f = fixture(async (text, config, signal, context) => {
+    received = { text, context };
+    return { marketing: 0.96, evidence_marketing: 0.96, useful: 0.1 };
+  }, { categories: ['marketing'] });
+  try {
+    const original = f.engine.site;
+    f.engine.site = { ...original, id: 'linux-do', extract(article) {
+      const post = original.extract(article);
+      return post && { ...post, scope: '主题标题' };
+    } };
+    f.article.querySelector('p').textContent = '加群领取稳赚不赔的课程';
+    f.engine.reset();
+    f.engine.scan();
+    const meta = f.engine.records.get(f.article);
+    meta.visible = true;
+    f.engine.consider(meta);
+    await wait(10);
+    assert.equal(received.text, '加群领取稳赚不赔的课程');
+    assert.deepEqual(received.context, { site: 'linux-do', scope: '主题标题', titleOnly: true, truncated: false });
+    assert.equal(f.paints.at(-1).decision.kind, 'filter');
+    const config = normalizeSettings({ categories: ['marketing'] });
+    assert.ok(f.engine.cached(meta.post, config));
+    assert.equal(f.engine.cached({ ...meta.post, scope: '正文' }, config), null);
   } finally { f.close(); }
 });

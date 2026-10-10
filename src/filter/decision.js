@@ -1,4 +1,5 @@
 import { CATEGORIES } from '../config/catalog.js';
+import { activeCategories, categoryThreshold, EVIDENCE_THRESHOLD } from './policy.js';
 
 export function localDecision(post, config) {
   if (config.allowedAccounts.includes(post.handle)) return { kind: 'allow', reason: '账号白名单' };
@@ -7,9 +8,10 @@ export function localDecision(post, config) {
   return keyword ? { kind: 'filter', reason: `关键词：${keyword}`, source: 'local' } : null;
 }
 
-export function scoreDecision(scores, config) {
-  const matches = config.categories.map(id => ({ id, title: CATEGORIES[id].title, score: scores[id] }))
-    .filter(item => Number.isFinite(item.score) && item.score >= config.threshold)
+export function scoreDecision(scores, config, context = {}) {
+  const matches = activeCategories(config, context).map(id => ({ id, title: CATEGORIES[id].title, score: scores[id], evidence: scores[`evidence_${id}`] }))
+    .filter(item => Number.isFinite(item.score) && item.score >= categoryThreshold(item.id, config, context)
+      && Number.isFinite(item.evidence) && item.evidence >= EVIDENCE_THRESHOLD)
     .sort((a, b) => b.score - a.score);
   if (!matches.length) return { kind: 'allow' };
   const protectedPost = config.protectUseful && scores.useful >= config.usefulThreshold;

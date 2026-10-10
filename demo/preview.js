@@ -13,7 +13,7 @@ globalThis.GM_xmlhttpRequest = options => {
   globalThis.demoRequests.push(payload);
   const spam = /被动收入|惊天内幕/.test(payload.state);
   const protectedPost = /手冲咖啡/.test(payload.state);
-  const answers = Object.fromEntries(Object.keys(payload.questions).map(id => [id, { noul: id === 'is_test' ? 1 : id === 'useful' ? protectedPost || !spam ? 0.95 : 0.1 : spam || (protectedPost && id === 'marketing') ? 0.96 : 0.08 }]));
+  const answers = Object.fromEntries(Object.keys(payload.questions).map(id => [id, { noul: id === 'is_test' ? 1 : id === 'useful' ? protectedPost || !spam ? 0.95 : 0.1 : spam || (protectedPost && ['marketing', 'evidence_marketing'].includes(id)) ? 0.96 : 0.08 }]));
   const timer = setTimeout(() => options.onload({ status: 200, responseText: JSON.stringify({ answers }) }), 120);
   return { abort() { clearTimeout(timer); options.onabort?.(); } };
 };

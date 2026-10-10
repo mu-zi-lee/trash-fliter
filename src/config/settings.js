@@ -44,8 +44,9 @@ export function normalizeSettings(raw = {}) {
   };
 }
 
-export function signature(config) {
-  return JSON.stringify([PROMPT_VERSION, config.provider, [...config.categories].sort(), config.protectUseful]);
+export function signature(config, context = {}) {
+  return JSON.stringify([PROMPT_VERSION, config.provider, [...config.categories].sort(), config.protectUseful,
+    context.site || '', context.scope || '正文', !!context.titleOnly, !!context.truncated]);
 }
 
 export function exportSettings(config) {

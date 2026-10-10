@@ -95,7 +95,7 @@ export class PostView {
     if (hiding && decision.source !== 'local') {
       const score = document.createElement('span');
       score.className = 'score';
-      score.textContent = `${Math.round(decision.score * 100)}%`;
+      score.textContent = `评分 ${Math.round(decision.score * 100)}`;
       heading.append(score);
     }
     copy.append(heading);
@@ -115,7 +115,7 @@ export class PostView {
       button.addEventListener('click', onToggle);
       row.append(button);
     }
-    row.title = `${decision.reason} · ${decision.source === 'local' ? '本地规则' : `模型评分 ${Math.round(decision.score * 100)}%`}${decision.kind === 'protected' ? ' · 内容具有明确价值，已保留' : ''}`;
+    row.title = `${decision.reason} · ${decision.source === 'local' ? '本地规则' : `模型评分 ${Math.round(decision.score * 100)} / 100（非准确率）`}${decision.kind === 'protected' ? ' · 内容具有明确价值，已保留' : ''}`;
     host.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); });
     root.append(row);
     let container = host;

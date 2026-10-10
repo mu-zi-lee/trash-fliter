@@ -46,10 +46,10 @@ test('account allowlist precedes explicit local blocks and keywords', () => {
 });
 
 test('useful content vetoes model filtering but does not veto local rules', () => {
-  assert.equal(scoreDecision({ marketing: 0.95, useful: 0.9 }, config).kind, 'protected');
-  assert.equal(scoreDecision({ marketing: 0.95, useful: 0.2 }, config).kind, 'filter');
-  assert.equal(scoreDecision({ marketing: 0.87, useful: 0.2 }, config).kind, 'allow');
-  assert.equal(scoreDecision({ marketing: 0.88, useful: 0.2 }, config).kind, 'filter');
+  assert.equal(scoreDecision({ marketing: 0.95, evidence_marketing: 0.95, useful: 0.9 }, config).kind, 'protected');
+  assert.equal(scoreDecision({ marketing: 0.95, evidence_marketing: 0.95, useful: 0.2 }, config).kind, 'filter');
+  assert.equal(scoreDecision({ marketing: 0.87, evidence_marketing: 0.95, useful: 0.2 }, config).kind, 'allow');
+  assert.equal(scoreDecision({ marketing: 0.88, evidence_marketing: 0.95, useful: 0.2 }, config).kind, 'filter');
 });
 
 test('model schema rejects incomplete scores instead of treating them as safe', () => {
