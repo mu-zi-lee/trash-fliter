@@ -1,0 +1,7 @@
+[data-xqf-position-static] { position: relative !important; }
+[data-xqf-state="collapse"]:not([data-xqf-layout="waterfall"]) > :not([data-xqf-ui]) { display: none !important; }
+[data-xqf-state="collapse"]:not([data-xqf-layout="waterfall"]):not(tr) { display: block !important; min-height: 72px !important; height: auto !important; padding: 0 !important; }
+[data-xqf-layout="waterfall"] > :not([data-xqf-ui]) { visibility: hidden !important; }
+tr[data-xqf-state="collapse"] > [data-xqf-ui="fold-cell"] { padding: 0 !important; }
+[data-xqf-state="cover"] > :not([data-xqf-ui]) { visibility: hidden !important; }
+[data-xqf-state="dim"] > :not([data-xqf-ui]) { filter: opacity(.35); }

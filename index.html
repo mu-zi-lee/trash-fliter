@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>trash-fliter · 本地预览</title>
+    <style>
+      *{box-sizing:border-box}body{margin:0;background:#fff;color:#161616;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;letter-spacing:0}
+      .layout{max-width:1060px;margin:auto;display:grid;grid-template-columns:180px minmax(0,600px) 1fr;min-height:100vh}
+      aside{padding:30px 24px;border-right:1px solid #eee}aside b{font-size:26px}aside p{margin-top:24px;font-weight:600}
+      main{border-right:1px solid #eee;min-width:0}.timeline-header{padding:20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:12px}
+      h1{font-size:18px;margin:0}.timeline-header small{color:#777;font-size:11px;display:block}.timeline-header button{background:#fff;border:1px solid #ddd;border-radius:5px;padding:7px 10px;cursor:pointer;font:12px inherit}
+      article{padding:18px 20px;border-bottom:1px solid #eee;min-width:0}.post-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-right:30px}
+      .avatar{width:32px;height:32px;flex:none;display:grid;place-items:center;background:#ededed;color:#444;font-weight:600;border-radius:50%;font-size:11px}
+      .author{font-size:13px;font-weight:600}.handle{color:#777;font-size:12px}a{color:inherit;text-decoration:none}article p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+      .post-actions{display:flex;gap:52px;margin-top:18px;color:#777;font-size:11px;align-items:center}.post-actions span{display:flex;align-items:center;gap:5px}
+      .rail{padding:30px 20px}.rail p{font-size:12px;color:#777}.rail b{font-size:13px}
+      @media(max-width:900px){.layout{grid-template-columns:140px minmax(0,600px)}.rail{display:none}}
+      @media(max-width:600px){.layout{display:block}aside{display:none}.timeline-header{padding:16px}article{padding:16px}.post-actions{gap:30px}}
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside><b>𝕏</b><p>首页</p><p>探索</p><p>通知</p><p>书签</p></aside>
+      <main><div class="timeline-header"><div><h1>为你推荐</h1><small>本地演示 · 模拟评分 · 不发送网络请求</small></div><button id="add-post" type="button">载入帖子</button></div><div id="timeline"></div></main>
+      <div class="rail"><b>阅读，少一点噪音。</b><p>trash-fliter</p></div>
+    </div>
+    <script type="module" src="/demo/preview.js"></script>
+  </body>
+</html>

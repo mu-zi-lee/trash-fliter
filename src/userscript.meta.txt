@@ -1,0 +1,28 @@
+// ==UserScript==
+// @name         trash-fliter
+// @namespace    https://github.com/mu-zi-lee/trash-fliter
+// @version      1.2.3
+// @description  多站点内容质量过滤，支持独立站点适配、可恢复折叠、本地规则与多维评分。
+// @match        https://x.com/*
+// @match        https://twitter.com/*
+// @match        https://linux.do/*
+// @match        https://www.xiaohongshu.com/*
+// @match        https://xiaohongshu.com/*
+// @match        https://www.bilibili.com/*
+// @match        https://t.bilibili.com/*
+// @match        https://search.bilibili.com/*
+// @match        https://www.douyin.com/*
+// @match        https://douyin.com/*
+// @match        https://www.youtube.com/*
+// @match        https://youtube.com/*
+// @connect      api.codiv.ai
+// @connect      console.nace.ai
+// @connect      api.typesafe.ai
+// @connect      openrouter.ai
+// @grant        GM_xmlhttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
+// @run-at       document-idle
+// @license      MIT
+// ==/UserScript==

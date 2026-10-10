@@ -1,0 +1,37 @@
+<button class="launcher" type="button" id="launch" aria-label="打开内容过滤设置"><span class="dot"></span><span class="status-text">内容过滤已暂停</span></button>
+      <dialog aria-labelledby="panel-title">
+        <form class="shell" novalidate>
+          <header><div class="brand"><span class="brand-icon"></span><div><h1 id="panel-title">trash-fliter</h1><div class="subtitle">X 内容质量过滤</div></div></div><span id="close-slot"></span></header>
+          <div class="stats"><div class="stat"><strong id="analyzed">0</strong><span>已检测</span></div><div class="stat"><strong id="filtered">0</strong><span>已过滤</span></div><div class="stat"><strong id="pending">0</strong><span>队列</span></div></div>
+          <nav class="tabs" role="tablist" aria-label="过滤设置">
+            <button class="tab" id="tab-filter" role="tab" aria-controls="view-filter" aria-selected="true" type="button" data-tab="filter">过滤</button>
+            <button class="tab" id="tab-rules" role="tab" aria-controls="view-rules" aria-selected="false" tabindex="-1" type="button" data-tab="rules">规则</button>
+            <button class="tab" id="tab-service" role="tab" aria-controls="view-service" aria-selected="false" tabindex="-1" type="button" data-tab="service">服务</button>
+          </nav>
+          <div class="scroll">
+            <section id="view-filter" role="tabpanel" aria-labelledby="tab-filter">
+              <div class="section"><label class="row"><span><span class="label">启用过滤</span><span class="hint" style="display:block">本地规则优先，模型按需检测</span></span><input id="enabled" class="switch" type="checkbox"></label></div>
+              <div class="section"><span class="label">过滤类型</span><div class="categories" id="categories"></div></div>
+              <div class="section"><label class="range-heading" for="threshold"><span class="label">触发阈值</span><output id="threshold-output">88%</output></label><input id="threshold" type="range" min="50" max="99" step="1"><div class="range-labels"><span>更多过滤</span><span>更少误判</span></div></div>
+              <div class="section"><span class="label" id="mode-label">处理方式</span><div class="segmented" id="modes" role="radiogroup" aria-labelledby="mode-label"></div><p class="hint" id="mode-hint"></p></div>
+              <div class="section"><label class="row"><span><span class="label">保护有价值内容</span><span class="hint" style="display:block">保留有具体信息、经验或娱乐价值的帖子</span></span><input id="protectUseful" class="switch" type="checkbox"></label><label class="row field"><span class="label">最短检测长度</span><input type="number" id="minLength" min="1" max="500" aria-label="最短检测字符数"></label></div>
+            </section>
+            <section id="view-rules" role="tabpanel" aria-labelledby="tab-rules" hidden>
+              <div class="section"><label class="field" for="blockedKeywords"><span class="label">过滤关键词</span><textarea id="blockedKeywords" placeholder="加群领取&#10;稳赚不赔"></textarea></label><p class="hint">每行一个词，忽略大小写，按文字包含匹配。</p></div>
+              <div class="section"><label class="field" for="blockedAccounts"><span class="label">过滤账号</span><textarea id="blockedAccounts" placeholder="@username"></textarea></label><p class="hint">每行一个账号，仅在你的浏览器中生效。</p></div>
+              <div class="section"><label class="field" for="allowedAccounts"><span class="label">始终保留</span><textarea id="allowedAccounts" placeholder="@username"></textarea></label><p class="hint">每行一个账号，优先于关键词、账号规则与模型判断。</p></div>
+            </section>
+            <section id="view-service" role="tabpanel" aria-labelledby="tab-service" hidden>
+              <div class="section"><label class="field" for="provider"><span class="label">检测服务</span><select id="provider"></select></label><div class="service-line"><span id="model" class="hint"></span><a id="register" target="_blank" rel="noopener noreferrer"></a></div>
+                <label class="field" for="key"><span class="label">API Key</span></label><div class="key-wrap"><input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="填写当前服务的密钥"><span id="key-toggle"></span></div>
+                <div class="service-line"><span class="hint">各服务密钥分别保存在油猴存储中</span><button id="test" class="button" type="button">测试连接</button></div>
+              </div>
+              <div class="section"><label class="row"><span><span class="label">每分钟请求上限</span><span class="hint" style="display:block">达到后自动等待并继续；失败也计入，测试另计</span></span><input id="requestRate" type="number" min="1" max="90" aria-label="每分钟请求上限"></label><div class="field"><span class="label" id="theme-label">外观</span><div id="themes" class="segmented" role="radiogroup" aria-labelledby="theme-label"></div></div></div>
+              <div class="section row"><div><span class="label">检测缓存</span><p class="hint">保留 7 天，最多 500 条</p></div><button id="clear" class="button" type="button">清空缓存</button></div>
+              <p class="notice">启用模型检测后，接近可视区域的帖子文字会发送给所选服务，可能产生费用。仅分析文字，评分属于模型判断。</p>
+            </section>
+          </div>
+          <p id="message" role="status" aria-live="polite"></p>
+          <footer><div class="footer-tools" id="footer-tools"></div><div class="actions"><button id="retry" class="button" type="button">重试</button><button class="button primary" id="save" type="submit">保存设置</button></div></footer>
+        </form>
+      </dialog><input id="import-file" type="file" accept=".json,application/json" hidden>
